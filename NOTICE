@@ -1,0 +1,22 @@
+Reefy Isaac Sim
+Copyright 2026 Reefy AI
+
+This product includes modifications based on the Isaac Sim v6.0.1 Docker web
+viewer recipe from NVIDIA Corporation, licensed under Apache License 2.0:
+
+https://github.com/isaac-sim/IsaacSim/tree/v6.0.1/tools/docker/web-viewer
+
+The viewer build downloads @nvidia/create-ov-web-rtc-app version 1.14.2 from
+NVIDIA's npm registry. The Reefy app references NVIDIA's official Isaac Sim
+container directly and does not redistribute that container.
+
+The Apache-2.0 license in this repository applies only to Reefy-authored source
+and Apache-2.0 upstream material. It does not grant rights to NVIDIA software,
+container images, npm packages, trademarks, or brand assets. The included
+Isaac logo remains a trademark or copyrighted asset of NVIDIA Corporation and
+is used only to identify the integrated product.
+
+NVIDIA, Isaac, Omniverse, and related marks are trademarks or registered
+trademarks of NVIDIA Corporation in the United States and other countries.
+This project is not affiliated with or endorsed by NVIDIA.
+

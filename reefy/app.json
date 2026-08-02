@@ -1,0 +1,126 @@
+{
+  "app_spec_version": 2,
+  "slug": "isaac-sim",
+  "version": "6.0.1-1",
+  "name": "NVIDIA Isaac Sim",
+  "icon": "icon.png",
+  "description": "GPU-accelerated robotics simulation with an interactive browser UI",
+  "image": "ghcr.io/reefyai/reefy-isaac-web-viewer:6.0.1-1",
+  "upstream_image": "nvcr.io/nvidia/isaac-sim:6.0.1",
+  "primary_service": "web-viewer",
+  "services": {
+    "web-viewer": {
+      "image": "ghcr.io/reefyai/reefy-isaac-web-viewer:6.0.1-1",
+      "network_mode": "host",
+      "depends_on": {
+        "isaac-sim": {
+          "condition": "service_healthy"
+        }
+      },
+      "route": {
+        "container_port": 8210,
+        "protocol": "http"
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "curl",
+          "-f",
+          "http://127.0.0.1:8210/"
+        ],
+        "interval": "30s",
+        "timeout": "5s",
+        "start_period": "10s",
+        "retries": 3
+      }
+    },
+    "isaac-sim": {
+      "image": "nvcr.io/nvidia/isaac-sim:6.0.1",
+      "network_mode": "host",
+      "devices": [
+        "nvidia.com/gpu=all"
+      ],
+      "entrypoint": [
+        "/bin/bash",
+        "-lc"
+      ],
+      "command": [
+        "set -e; host_ip=$$(hostname -I 2>/dev/null | awk '{print $$1}'); if [ -z \"$$host_ip\" ]; then echo 'Unable to determine the Reefy device LAN address' >&2; exit 1; fi; export ISAACSIM_HOST=\"$$host_ip\"; exec /isaac-sim/runheadless.sh --/app/window/width=$${ISAACSIM_WIDTH} --/app/window/height=$${ISAACSIM_HEIGHT} --/app/window/dpiScaleOverride=$${ISAACSIM_DPI_SCALE}"
+      ],
+      "environment": {
+        "ACCEPT_EULA": "Y",
+        "OMNICLIENT_HUB_MODE": "disabled",
+        "ISAACSIM_SIGNAL_PORT": "49100",
+        "ISAACSIM_STREAM_PORT": "47998",
+        "ISAACSIM_WIDTH": "1920",
+        "ISAACSIM_HEIGHT": "1080",
+        "ISAACSIM_DPI_SCALE": "1.25"
+      },
+      "mounts": {
+        "documents": "/isaac-sim/Documents",
+        "data": "/isaac-sim/.local/share/ov/data",
+        "pkg": "/isaac-sim/.local/share/ov/pkg",
+        "config": "/isaac-sim/.nvidia-omniverse/config",
+        "logs": "/isaac-sim/.nvidia-omniverse/logs",
+        "cache": "/isaac-sim/.cache",
+        "compute-cache": "/isaac-sim/.nv/ComputeCache"
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "logdir=/isaac-sim/.nvidia-omniverse/logs/Kit; [ -d \"$$logdir\" ] && latest=$$(ls -t \"$$logdir\"/*/*/kit_*.log 2>/dev/null | head -1) && [ -n \"$$latest\" ] && grep -q AppReady \"$$latest\""
+        ],
+        "interval": "30s",
+        "timeout": "10s",
+        "start_period": "180s",
+        "retries": 3
+      },
+      "shm_size": "2gb"
+    }
+  },
+  "volumes": {
+    "documents": {
+      "uid": 1234,
+      "backup": [
+        "borgbase"
+      ]
+    },
+    "data": {
+      "uid": 1234,
+      "backup": [
+        "borgbase"
+      ]
+    },
+    "pkg": {
+      "uid": 1234,
+      "backup": []
+    },
+    "config": {
+      "uid": 1234,
+      "backup": [
+        "borgbase"
+      ]
+    },
+    "logs": {
+      "uid": 1234,
+      "backup": []
+    },
+    "cache": {
+      "uid": 1234,
+      "backup": []
+    },
+    "compute-cache": {
+      "uid": 1234,
+      "backup": []
+    }
+  },
+  "gpu": true,
+  "needs_llm": false,
+  "tags": [
+    "robotics",
+    "simulation",
+    "gpu",
+    "pro"
+  ]
+}
+
