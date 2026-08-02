@@ -1,7 +1,7 @@
 {
   "app_spec_version": 2,
   "slug": "isaac-sim",
-  "version": "6.0.1-reefy.2",
+  "version": "6.0.1-reefy.3",
   "name": "NVIDIA Isaac Sim",
   "icon": "icon.png",
   "description": "GPU-accelerated robotics simulation with an interactive browser UI",
@@ -19,7 +19,8 @@
       },
       "route": {
         "container_port": 8210,
-        "protocol": "http"
+        "protocol": "http",
+        "direct_lan": true
       },
       "healthcheck": {
         "test": [
