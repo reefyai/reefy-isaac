@@ -16,6 +16,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
     && rm -rf /var/lib/apt/lists/*
 
+COPY server.mjs server.test.mjs /tmp/reefy-viewer-gateway/
+RUN node --test /tmp/reefy-viewer-gateway/server.test.mjs
+
 RUN echo '@nvidia:registry=https://edge.urm.nvidia.com/artifactory/api/npm/omniverse-client-npm/' >> /root/.npmrc \
     && npx --yes @nvidia/create-ov-web-rtc-app@1.14.2 --name web-viewer --sample local-sample --outputDir /app \
     && rm -f /root/.npmrc
@@ -27,8 +30,11 @@ ARG ISAACSIM_STREAM_PORT=47998
 
 # The official viewer bakes one host address into its JavaScript. Reefy devices
 # have different LAN addresses, so use the hostname from the page URL instead.
+# Signaling uses the current page port and protocol so Reefy's authenticated
+# HTTPS/WebSocket proxy can front the browser connection. server.mjs relays the
+# upgraded connection to Isaac Sim's local TCP 49100 listener.
 RUN sed -i "s/signalingServer: [^,]*/signalingServer: window.location.hostname/" src/main.ts \
-    && sed -i "/signalingServer:/a\\    signalingPort: ${ISAACSIM_SIGNAL_PORT},\n    mediaServer: window.location.hostname,\n    mediaPort: ${ISAACSIM_STREAM_PORT},\n    forceWSS: false," src/main.ts
+    && sed -i "/signalingServer:/a\\    signalingPort: Number(window.location.port || (window.location.protocol === 'https:' ? 443 : 80)),\n    mediaServer: window.location.hostname,\n    mediaPort: ${ISAACSIM_STREAM_PORT},\n    forceWSS: window.location.protocol === 'https:'," src/main.ts
 
 # Preserve browser shortcuts instead of forwarding them to the stream.
 RUN sed -i '/void app.initialize/i\
@@ -63,15 +69,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY --from=builder --chmod=755 /app/web-viewer/package.json ./
-
-RUN echo '@nvidia:registry=https://edge.urm.nvidia.com/artifactory/api/npm/omniverse-client-npm/' >> /root/.npmrc \
-    && npm install --ignore-scripts \
-    && npm cache clean --force \
-    && rm -f /root/.npmrc \
-    && chown -R appuser:appuser /app
-
 COPY --from=builder --chown=appuser:appuser --chmod=755 /app/web-viewer/dist ./dist
+COPY --chown=appuser:appuser --chmod=755 server.mjs ./server.mjs
+
+RUN node --check /app/server.mjs
 
 USER appuser
 
@@ -80,5 +81,5 @@ EXPOSE 8210
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://127.0.0.1:8210/ || exit 1
 
-CMD ["npx", "vite", "preview", "--host", "0.0.0.0", "--port", "8210"]
+CMD ["node", "/app/server.mjs"]
 

@@ -1,16 +1,16 @@
 {
   "app_spec_version": 2,
   "slug": "isaac-sim",
-  "version": "6.0.1-1",
+  "version": "6.0.1-reefy.2",
   "name": "NVIDIA Isaac Sim",
   "icon": "icon.png",
   "description": "GPU-accelerated robotics simulation with an interactive browser UI",
-  "image": "ghcr.io/reefyai/reefy-isaac-web-viewer:6.0.1-1",
+  "image": "ghcr.io/reefyai/reefy-isaac-web-viewer:6.0.1-reefy.2",
   "upstream_image": "nvcr.io/nvidia/isaac-sim:6.0.1",
   "primary_service": "web-viewer",
   "services": {
     "web-viewer": {
-      "image": "ghcr.io/reefyai/reefy-isaac-web-viewer:6.0.1-1",
+      "image": "ghcr.io/reefyai/reefy-isaac-web-viewer:6.0.1-reefy.2",
       "network_mode": "host",
       "depends_on": {
         "isaac-sim": {
@@ -123,4 +123,3 @@
     "pro"
   ]
 }
-

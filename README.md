@@ -21,7 +21,10 @@ image is pulled directly from NVIDIA. Reefy does not rebuild or republish the
 
 The viewer image is built by this repository from NVIDIA's Apache-2.0 licensed
 Isaac Sim Docker viewer recipe. It uses the browser's current hostname at
-runtime, so one image works with each device's LAN address.
+runtime, so one image works with each device's LAN address. A small Node server
+relays WebSocket signaling through the same Reefy app route, allowing Reefy's
+HTTPS termination and token authentication to cover both the page and
+signaling connection.
 
 ## Runtime behavior
 
@@ -39,12 +42,17 @@ directly to the device on these private-LAN ports:
 | Port | Protocol | Purpose |
 | ---: | --- | --- |
 | 8210 | TCP | Browser viewer |
-| 49100 | TCP | WebRTC signaling |
+| 49100 | TCP | Isaac Sim signaling upstream used locally by the viewer gateway |
 | 47998 | UDP | WebRTC media |
 
-The Reefy proxy authenticates the viewer route, but signaling and media remain
-direct LAN connections. Run this app only on a trusted private network. Do not
-expose ports 49100 or 47998 to the public Internet.
+The Reefy proxy authenticates the viewer page and WebSocket signaling when the
+app is opened through the normal Reefy route. UDP media remains a direct LAN
+connection to port 47998. Isaac Sim still creates its TCP 49100 listener because
+it uses host networking, but browsers using the Reefy route connect through the
+viewer gateway instead. Run this app only on a trusted private network. Do not
+expose ports 49100 or 47998 to the public Internet. Opening
+`http://DEVICE-LAN-IP:8210` directly is useful for diagnostics but bypasses
+Reefy authentication.
 
 ## Persistent data
 
@@ -82,7 +90,7 @@ receives the CDI device request. The viewer does not use it, and this is safe.
 The public image is built for `linux/amd64` and published as:
 
 ```text
-ghcr.io/reefyai/reefy-isaac-web-viewer:6.0.1-1
+ghcr.io/reefyai/reefy-isaac-web-viewer:6.0.1-reefy.2
 ```
 
 For a local build:
@@ -110,4 +118,3 @@ NVIDIA, Isaac, and related marks belong to NVIDIA Corporation.
 Reefy-authored source in this repository is licensed under Apache-2.0. NVIDIA
 software, npm packages, container images, sample-derived code, and brand assets
 remain governed by their respective NVIDIA terms. See [NOTICE](NOTICE).
-
